@@ -11,9 +11,10 @@ import { AFunc } from "../types";
 export interface IUseEmailOptions{
     recipients: string | string[];
     sender?: string;
+    subject: string;
     content: string;
     html?: boolean;
-    onError: (error: string) => void;
+    onError?: (error: string) => void;
 }
 
 export type UseEmailFunction = AFunc;
@@ -22,11 +23,12 @@ export type UseEmailFunction = AFunc;
 
 // Functions
 
-export function useEmail({ recipients, sender, content, html, onError }: IUseEmailOptions): UseEmailFunction{
+export function useEmail({ recipients, sender, subject, content, html, onError }: IUseEmailOptions): UseEmailFunction{
 
     const transport: Transporter<SentMessageInfo, Options> = createTransport({
-        service: process.env.EmailService,
-        port: Number(process.env.EmailServicePort),
+        host: process.env.EmailService,
+        port: 465,
+        secure: true,
         auth: {
             user: process.env.EmailUser,
             pass: process.env.EmailPass
@@ -38,14 +40,19 @@ export function useEmail({ recipients, sender, content, html, onError }: IUseEma
             await transport.sendMail({
                 to: recipients,
                 from: sender,
+                subject,
                 text: html
                     ? undefined
                     : content,
                 html: html
                     ? content
                     : undefined
-            })
+            });
+            console.log(`Sent email to ${recipients}!`);
         }
-        catch(error){ onError(`${error}`); }
+        catch(error){
+            onError && onError(`${error}`);
+            !onError && console.log(`Email error:\n${error}`);
+        }
     };
 }

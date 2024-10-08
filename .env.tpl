@@ -1,6 +1,9 @@
 SessionSecret = string
 
 EmailService = string
-EmailServicePort = number
 EmailUser = string
 EmailPass = string
+
+AdminEmail = string
+
+MongoConnectURI = string
