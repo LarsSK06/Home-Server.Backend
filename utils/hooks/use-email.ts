@@ -8,7 +8,7 @@ import { AFunc } from "../types";
 
 // Types
 
-export interface IUseEmailOptions{
+export interface IUseEmailInput{
     recipients: string | string[];
     sender?: string;
     subject: string;
@@ -23,7 +23,7 @@ export type UseEmailFunction = AFunc;
 
 // Functions
 
-export function useEmail({ recipients, sender, subject, content, html, onError }: IUseEmailOptions): UseEmailFunction{
+export function useEmail({ recipients, sender, subject, content, html, onError }: IUseEmailInput): UseEmailFunction{
 
     const transport: Transporter<SentMessageInfo, Options> = createTransport({
         host: process.env.EmailService,

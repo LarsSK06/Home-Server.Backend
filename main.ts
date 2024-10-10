@@ -5,7 +5,7 @@ import { useState } from "./utils/hooks/use-state";
 
 import express, { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
-import mongoose from "mongoose";
+import sqlite from "sqlite3";
 import dotenv from "dotenv";
 
 
@@ -74,14 +74,6 @@ app.all("*", (_: Request, response: Response): void => {
 // Hosting
 
 (async (): Promise<void> => {
-    try{ await mongoose.connect(process.env.MongoConnectURI!); }
-    catch(error){
-        setError(`${error}`);
-
-        if(process.env.NODE_ENV == "production")
-            return sendErrorEmail();
-    }
-
     app.listen(4000, "0.0.0.0", async (): Promise<void> => {
         console.log("Server online!");
 

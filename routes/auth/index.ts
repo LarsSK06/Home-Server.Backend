@@ -3,7 +3,8 @@
 import bcrypt from "bcrypt";
 
 import { Router, Request, Response, NextFunction } from "express";
-import { MUser, User } from "../../utils/models";
+import { users } from "../../utils/database";
+import { IUser } from "../../utils/types";
 
 
 
@@ -24,10 +25,37 @@ interface IResponseBody{
 
 // Endpoints
 
-app.all("/log-in", async (request: Request<{}, IResponseBody, { email: string; password: string }, {}>, response: Response<IResponseBody>, next: NextFunction): Promise<void> => {
+app.post("/sign-up", async (request: Request<{}, IResponseBody | IUser, { name: string; email: string; password: string; }>, response: Response<IResponseBody | IUser>): Promise<void> => {
+    const { name, email, password } = request.body;
+
+    if(users.all().some((i: IUser): boolean => i.email.toLowerCase() == email.toLowerCase())){
+        response
+            .status(409)
+            .send({
+                message: "Email already in use!",
+                field: "email"
+            });
+        return;
+    }
+
+    const user: IUser = users.add({
+        id: Date.now(),
+        name,
+        email: email.toLowerCase(),
+        password: await bcrypt.hash(password, 12)
+    })[0];
+
+    response
+        .status(200)
+        .send(user);
+});
+
+app.post("/log-in", async (request: Request<{}, IResponseBody | IUser, { email: string; password: string; }, {}>, response: Response<IResponseBody | IUser>): Promise<void> => {
     const { email, password } = request.body;
 
-    if(!(await User.exists({ email }))){
+    const user: IUser | undefined = users.all().find((i: IUser): boolean => i.email.toLowerCase() == email.toLowerCase());
+
+    if(!user){
         response
             .status(404)
             .send({
@@ -36,8 +64,6 @@ app.all("/log-in", async (request: Request<{}, IResponseBody, { email: string; p
             });
         return;
     }
-
-    const user: MUser = (await User.findOne({ email }))!;
 
     if(!(await bcrypt.compare(password, user.password))){
         response
@@ -48,6 +74,10 @@ app.all("/log-in", async (request: Request<{}, IResponseBody, { email: string; p
             });
         return;
     }
+
+    response
+        .status(200)
+        .send({ ...user, password: "" } as IUser);
 });
 
 
