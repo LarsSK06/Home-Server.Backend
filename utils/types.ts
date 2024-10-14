@@ -21,3 +21,11 @@ export interface IUser{
     email: string;
     password: string;
 }
+
+
+
+// Enums
+
+export enum Address{
+    PhilipsHueBridge = "192.168.10.176"
+}

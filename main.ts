@@ -3,10 +3,10 @@
 import { useEmail, UseEmailFunction } from "./utils/hooks/use-email";
 import { useState } from "./utils/hooks/use-state";
 
-import express, { Express, Request, Response, NextFunction } from "express";
+import express, { Express, Request, Response } from "express";
 import session from "express-session";
-import sqlite from "sqlite3";
 import dotenv from "dotenv";
+import cors from "cors";
 
 
 
@@ -16,6 +16,7 @@ dotenv.config();
 
 const app: Express = express();
 
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -57,7 +58,8 @@ const sendSuccessEmail: UseEmailFunction = useEmail({
 
 // Routing
 
-app.use("/auth", require("./routes/auth"));
+//app.use("/auth", require("./routes/auth"));
+app.use("/light", require("./routes/light"));
 
 
 

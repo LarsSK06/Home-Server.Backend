@@ -6,4 +6,4 @@ EmailPass = string
 
 AdminEmail = string
 
-MongoConnectURI = string
+PhilipsHueUser = string
