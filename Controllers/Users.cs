@@ -1,34 +1,36 @@
 using Microsoft.AspNetCore.Mvc;
-using APIKvihaugenEngine.Classes;
+using MongoDB.Driver;
+using APIKvihaugenEngine.Entities;
+using APIKvihaugenEngine.Data;
 
 namespace APIKvihaugenEngine.Controllers;
 
 [ApiController]
-[Route("[controller]/{path}")]
+[Route("[controller]")]
 public class UsersController : ControllerBase{
-    private readonly ILogger<UsersController> _logger;
 
-    public UsersController(ILogger<UsersController> logger){
-        _logger = logger;
+    private readonly IMongoCollection<User>? _users;
+
+    public UsersController(MongoDBService mongoDBService){
+        _users = mongoDBService.Database?.GetCollection<User>("users");
     }
 
     [HttpGet]
-    public Person Hehehe(){
-        return new Person{
-            Path = "GET",
-            Name = "Lars Kvihaugen",
-            Age = 18,
-            Email = "lars@kvihaugen.no"
-        };
+    public async Task<IEnumerable<User>> GetUsers(){
+        return
+            await _users
+                .Find(FilterDefinition<User>.Empty)
+                .ToListAsync();
     }
 
-    [HttpPost]
-    public Person Post(){
-        return new Person{
-            Path = "POST",
-            Name = "Lars Kvihaugen",
-            Age = 18,
-            Email = "lars@kvihaugen.no"
-        };
+    [HttpGet("{id}")]
+    public ActionResult<User> GetUser(string id){
+        FilterDefinition<User> filter = Builders<User>.Filter.Eq(i => i.Id, id);
+        User user = _users.Find(filter).FirstOrDefault();
+
+        return user is not null
+            ? Ok(user)
+            : NotFound();
     }
+
 }
