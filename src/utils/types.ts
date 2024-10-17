@@ -15,13 +15,6 @@ export interface IAny<T = any>{
     [key: string | number]: T;
 }
 
-export interface IUser{
-    id: number;
-    name: string;
-    email: string;
-    password: string;
-}
-
 
 
 // Enums

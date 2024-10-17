@@ -1,7 +1,7 @@
 {
     "scripts": {
         "start": "npx tsx main.ts",
-        "dev": "nodemon --exec \"tsx main.ts\" --ext \"ts\""
+        "dev": "nodemon --exec \"tsx main.ts\" --ext \"ts,env\""
     },
     "dependencies": {
         "@types/bcrypt": "^5.0.2",
@@ -10,6 +10,7 @@
         "dotenv": "^16.4.5",
         "express": "^4.21.0",
         "express-session": "^1.18.0",
+        "mongoose": "^8.7.1",
         "nodemailer": "^6.9.15"
     },
     "devDependencies": {
@@ -17,6 +18,7 @@
         "@types/dotenv": "^6.1.1",
         "@types/express": "^5.0.0",
         "@types/express-session": "^1.18.0",
+        "@types/mongoose": "^5.11.96",
         "@types/nodemailer": "^6.4.16",
         "nodemon": "^3.1.7",
         "tsx": "^4.19.1"

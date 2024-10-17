@@ -51,8 +51,8 @@ export function useEmail({ recipients, sender, subject, content, html, onError }
             console.log(`Sent email to ${recipients}!`);
         }
         catch(error){
-            onError && onError(`${error}`);
-            !onError && console.log(`Email error:\n${error}`);
+            if(onError) onError(`${error}`);
+            else console.log(`Email error:\n${error}`);
         }
     };
 }

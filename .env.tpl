@@ -7,3 +7,5 @@ EmailPass = string
 AdminEmail = string
 
 PhilipsHueUser = string
+
+DatabaseURI = string
