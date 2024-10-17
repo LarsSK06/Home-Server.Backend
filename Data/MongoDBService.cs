@@ -10,7 +10,7 @@ namespace APIKvihaugenEngine.Data{
             _config = config;
 
             MongoUrl url = MongoUrl.Create(_config.GetConnectionString("DatabaseConnection"));
-            MongoClient client = new MongoClient(url);
+            MongoClient client = new (url);
             
             _database = client.GetDatabase(url.DatabaseName);
         }
