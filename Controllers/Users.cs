@@ -37,15 +37,7 @@ public class UsersController : ControllerBase{
             return NotFound();
         
         FilterDefinition<User>? filter = Builders<User>.Filter.Eq(i => i.Id, id);
-
-        if(filter is null)
-            return NotFound();
-
         IAsyncCursor<User>? users = await _users.FindAsync(filter);
-
-        if(users is null)
-            return NotFound();
-
         User? user = await users.FirstOrDefaultAsync();
 
         if(user is null)
@@ -58,6 +50,12 @@ public class UsersController : ControllerBase{
     public async Task<ActionResult> CreateUser(MutableUser data){
         if(_users is null)
             return NotFound();
+        
+        IAsyncCursor<User>? conflictedUsersCursor = await _users.FindAsync(Builders<User>.Filter.Eq(i => i.Email, data.Email));
+        List<User> conflictedUsers = await conflictedUsersCursor.ToListAsync();
+
+        if(conflictedUsers.Count() > 0)
+            return Conflict();
 
         User user = new User{
             Id = (int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds,
@@ -76,4 +74,27 @@ public class UsersController : ControllerBase{
         );
     }
 
+    [HttpPost("LogIn")]
+    public async Task<ActionResult<PublicUser>> LogIn(Credentials credentials){
+        if(_users is null)
+            return NotFound();
+
+        FilterDefinition<User>? filter = Builders<User>.Filter.Eq(i => i.Email, credentials.Email);
+        IAsyncCursor<User>? users = await _users.FindAsync(filter);
+        User? user = await users.FirstOrDefaultAsync();
+
+        if(user is null)
+            return NotFound();
+
+        if(user.Password != credentials.Password)
+            return Unauthorized();
+        
+        return Ok(user.ToPublic());
+    }
+
+}
+
+public class Credentials{
+    public required string Email { get; set; }
+    public required string Password { get; set; }
 }
