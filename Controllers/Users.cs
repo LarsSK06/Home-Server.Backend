@@ -16,17 +16,16 @@ public class UsersController : ControllerBase{
     }
 
     [HttpGet]
-    public async Task<IEnumerable<User>> GetUsers(){
-        return
-            await _users
-                .Find(FilterDefinition<User>.Empty)
-                .ToListAsync();
+    public IEnumerable<User> GetUsers(){
+        return _users
+            .Find(FilterDefinition<User>.Empty)
+            .ToList();
     }
 
     [HttpGet("{id}")]
     public ActionResult<User> GetUser(string id){
         FilterDefinition<User> filter = Builders<User>.Filter.Eq(i => i.Id, id);
-        User user = _users.Find(filter).FirstOrDefault();
+        User user = _users.Find(filter).First();
 
         return user is not null
             ? Ok(user)
