@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
-using APIKvihaugenEngine.Entities;
+using APIKvihaugenEngine.Models;
 using APIKvihaugenEngine.Data;
 
 namespace APIKvihaugenEngine.Controllers;
@@ -16,16 +16,16 @@ public class UsersController : ControllerBase{
     }
 
     [HttpGet]
-    public IEnumerable<User> GetUsers(){
-        return _users
+    public async Task<IEnumerable<User>> GetUsers(){
+        return await _users
             .Find(FilterDefinition<User>.Empty)
-            .ToList();
+            .ToListAsync();
     }
 
     [HttpGet("{id}")]
-    public ActionResult<User> GetUser(string id){
+    public async Task<ActionResult<User>> GetUser(int id){
         FilterDefinition<User> filter = Builders<User>.Filter.Eq(i => i.Id, id);
-        User user = _users.Find(filter).First();
+        User user = await _users.Find(filter).FirstAsync();
 
         return user is not null
             ? Ok(user)
@@ -43,7 +43,7 @@ public class UsersController : ControllerBase{
 
         return CreatedAtAction(
             nameof(GetUser),
-            new { email = user.Email },
+            new { id = user.Id },
             user
         );
     }
