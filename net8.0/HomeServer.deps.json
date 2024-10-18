@@ -6,12 +6,12 @@
     "compilationOptions": {},
     "targets": {
         ".NETCoreApp,Version=v8.0": {
-            "APIKvihaugenEngine/1.0.0": {
+            "HomeServer/1.0.0": {
                 "dependencies": {
                     "Swashbuckle.AspNetCore": "6.6.2"
                 },
                 "runtime": {
-                    "APIKvihaugenEngine.dll": {}
+                    "HomeServer.dll": {}
                 }
             },
             "Microsoft.Extensions.ApiDescription.Server/6.0.5": {},
@@ -64,7 +64,7 @@
         }
     },
     "libraries": {
-        "APIKvihaugenEngine/1.0.0": {
+        "HomeServer/1.0.0": {
             "type": "project",
             "serviceable": false,
             "sha512": ""

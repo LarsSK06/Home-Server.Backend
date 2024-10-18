@@ -1,6 +1,6 @@
 using MongoDB.Driver;
 
-namespace APIKvihaugenEngine.Data;
+namespace HomeServer.Data;
 
 public class MongoDBService{
 
