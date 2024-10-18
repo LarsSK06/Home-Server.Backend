@@ -1,21 +1,21 @@
 using MongoDB.Driver;
 
-namespace APIKvihaugenEngine.Data{
-    public class MongoDBService{
+namespace APIKvihaugenEngine.Data;
 
-        private readonly IConfiguration _config;
-        private readonly IMongoDatabase? _database;
+public class MongoDBService{
 
-        public MongoDBService(IConfiguration config){
-            _config = config;
+    private readonly IConfiguration _config;
+    private readonly IMongoDatabase? _database;
 
-            MongoUrl url = MongoUrl.Create(_config.GetConnectionString("DatabaseConnection"));
-            MongoClient client = new (url);
-            
-            _database = client.GetDatabase(url.DatabaseName);
-        }
+    public MongoDBService(IConfiguration config){
+        _config = config;
 
-        public IMongoDatabase? Database => _database;
-
+        MongoUrl url = MongoUrl.Create(_config.GetConnectionString("DatabaseConnection"));
+        MongoClient client = new (url);
+        
+        _database = client.GetDatabase(url.DatabaseName);
     }
+
+    public IMongoDatabase? Database => _database;
+
 }
