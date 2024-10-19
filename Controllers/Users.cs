@@ -9,7 +9,7 @@ namespace HomeServer.Controllers;
 [Route("[controller]")]
 public class UsersController : ControllerBase{
 
-    private readonly IMongoCollection<User>? _users;
+    public readonly IMongoCollection<User>? _users;
 
     public UsersController(MongoDBService mongoDBService){
         _users = mongoDBService.Database?.GetCollection<User>("users");
