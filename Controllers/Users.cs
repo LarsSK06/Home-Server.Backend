@@ -2,28 +2,40 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using HomeServer.Models;
 using HomeServer.Data;
+using Microsoft.AspNetCore.Cors;
 
 namespace HomeServer.Controllers;
 
+[EnableCors("Policy")]
 [ApiController]
 [Route("[controller]")]
 public class UsersController : ControllerBase{
 
     public readonly IMongoCollection<User>? _users;
+    public readonly IMongoCollection<Loan>? _loans;
 
     public UsersController(MongoDBService mongoDBService){
         _users = mongoDBService.Database?.GetCollection<User>("users");
+        _loans = mongoDBService.Database?.GetCollection<Loan>("loans");
     }
 
     [HttpGet]
-    public async Task<IEnumerable<PublicUser>> GetUsers(){
-        List<User>? users = await (await _users.FindAsync(FilterDefinition<User>.Empty)).ToListAsync();
+    public async Task<ActionResult<IEnumerable<PublicUser>>> GetUsers(){
+        if(_users is null)
+            return NotFound();
+
+        if(_loans is null)
+            return NotFound();
+
+        FilterDefinition<User>? filter = FilterDefinition<User>.Empty;
+        IAsyncCursor<User>? cursor = await _users.FindAsync(filter);
+        List<User>? users = await cursor.ToListAsync();
         List<PublicUser> publicUsers = new();
 
         foreach(User i in users)
-            publicUsers.Add(i.ToPublic());
-        
-        return publicUsers;
+            publicUsers.Add(await i.ToPublic(_loans));
+
+        return Ok(publicUsers);
     }
 
     [HttpGet("{id}")]
@@ -31,19 +43,25 @@ public class UsersController : ControllerBase{
         if(_users is null)
             return NotFound();
         
+        if(_loans is null)
+            return NotFound();
+        
         FilterDefinition<User>? filter = Builders<User>.Filter.Eq(i => i.Id, id);
-        IAsyncCursor<User>? users = await _users.FindAsync(filter);
-        User? user = await users.FirstOrDefaultAsync();
+        IAsyncCursor<User>? cursor = await _users.FindAsync(filter);
+        User? first = await cursor.FirstOrDefaultAsync();
 
-        if(user is null)
+        if(first is null)
             return NotFound();
 
-        return user.ToPublic();
+        return await first.ToPublic(_loans);
     }
 
     [HttpPost]
-    public async Task<ActionResult> CreateUser(MutableUser data){
+    public async Task<ActionResult<PublicUser>> CreateUser(MutableUser data){
         if(_users is null)
+            return NotFound();
+
+        if(_loans is null)
             return NotFound();
         
         IAsyncCursor<User>? conflictedUsersCursor = await _users.FindAsync(Builders<User>.Filter.Eq(i => i.Email, data.Email));
@@ -57,7 +75,7 @@ public class UsersController : ControllerBase{
             Name = data.Name,
             Password = data.Password, // hash
             Email = data.Email,
-            Admin = data.Email.Equals(data.Email),
+            Admin = data.Email.Equals("lars@kvihaugen.no"),
             Loans = []
         };
 
@@ -66,13 +84,16 @@ public class UsersController : ControllerBase{
         return CreatedAtAction(
             nameof(GetUser),
             new { id = user.Id },
-            user
+            await user.ToPublic(_loans)
         );
     }
 
     [HttpPost("LogIn")]
     public async Task<ActionResult<PublicUser>> LogIn(Credentials credentials){
         if(_users is null)
+            return NotFound();
+
+        if(_loans is null)
             return NotFound();
 
         FilterDefinition<User>? filter = Builders<User>.Filter.Eq(i => i.Email, credentials.Email);
@@ -85,7 +106,7 @@ public class UsersController : ControllerBase{
         if(user.Password != credentials.Password)
             return Unauthorized();
         
-        return Ok(user.ToPublic());
+        return Ok(await user.ToPublic(_loans));
     }
 
 }

@@ -7,6 +7,18 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<MongoDBService>();
 
+builder.Services.AddCors(options => {
+    options.AddPolicy(
+        name: "Policy",
+        policy => {
+            policy
+                .WithOrigins("http://localhost:3000")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        }
+    );
+});
+
 WebApplication app = builder.Build();
 
 if(app.Environment.IsDevelopment()){
@@ -15,14 +27,8 @@ if(app.Environment.IsDevelopment()){
 }
 
 app.UseHttpsRedirection();
+app.UseCors();
 app.UseAuthorization();
 app.MapControllers();
-
-app.UseCors(options =>
-    options
-        .WithOrigins("*")
-        .AllowAnyMethod()
-        .AllowAnyHeader()
-);
 
 app.Run();

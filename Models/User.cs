@@ -1,5 +1,6 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Driver;
 
 namespace HomeServer.Models;
 
@@ -24,11 +25,32 @@ public class User{
     [BsonElement("admin"), BsonRepresentation(BsonType.Boolean)]
     public required bool Admin { get; set; }
 
-    [BsonElement("loans"), BsonRepresentation(BsonType.Array)]
-    public required IEnumerable<int> Loans { get; set; }
+    [BsonElement("loans")]
+    public required int[] Loans { get; set; }
 
-    public PublicUser ToPublic(){
+    public async Task<PublicUser> ToPublic(IMongoCollection<Loan> loanCollection){
+        List<PublicLoanEmbed> loans = new List<PublicLoanEmbed>{};
+
+        foreach(int i in Loans){
+            FilterDefinition<Loan> filter = Builders<Loan>.Filter.Eq(i => i.OwnerId, Id);
+            IAsyncCursor<Loan> cursor = await loanCollection.FindAsync<Loan>(filter);
+            Loan? first = await cursor.FirstOrDefaultAsync();
+
+            if(first is not null)
+                loans.Add(first.ToEmbed());
+        }
+
         return new PublicUser{
+            Id = Id,
+            Name = Name,
+            Email = Email,
+            Admin = Admin,
+            Loans = loans
+        };
+    }
+
+    public PublicUserEmbed ToEmbed(){
+        return new PublicUserEmbed{
             Id = Id,
             Name = Name,
             Email = Email,
@@ -46,12 +68,8 @@ public class User{
 
 }
 
-public class PublicUser{
+public class PublicUser : PublicUserEmbed{
 
-    public required int Id { get; set; }
-    public required string Name { get; set; }
-    public required string Email { get; set; }
-    public required bool Admin { get; set; }
     public required IEnumerable<PublicLoanEmbed> Loans { get; set; }
 
 }
