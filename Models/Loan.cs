@@ -20,33 +20,12 @@ public class Loan{
 
     [BsonElement("item"), BsonRepresentation(BsonType.String)]
     public required string Item { get; set; }
-
+    
     [BsonElement("object"), BsonRepresentation(BsonType.String)]
     public required string Object { get; set; }
 
     [BsonElement("ownerId"), BsonRepresentation(BsonType.Int32)]
     public required int OwnerId { get; set; }
-
-    public PublicLoan ToPublic(){
-        return new PublicLoan{
-            Id = Id,
-            Name = Name,
-            Subject = Subject,
-            Item = Item,
-            Object = Object,
-            Owner = null
-        };
-    }
-
-    public MutableLoan ToMutable(){
-        return new MutableLoan{
-            Name = Name,
-            Subject = Subject,
-            Item = Item,
-            Object = Object,
-            OwnerId = OwnerId
-        };
-    }
 
 }
 
@@ -54,19 +33,22 @@ public class PublicLoan{
 
     public required int Id { get; set; }
     public required string Name { get; set; }
-    public required string Subject { get; set; }
-    public required string Item { get; set; }
-    public required string Object { get; set; }
-    public required PublicUser Owner { get; set; }
+    public required string Email { get; set; }
+    public required bool Admin { get; set; }
+    public required IEnumerable<PublicLoanEmbed> Loans { get; set; }
 
 }
 
-public class MutableLoan{
+public class PublicLoanEmbed{
+
+    public required int Id { get; set; }
+
+}
+
+public class MutableUser{
 
     public required string Name { get; set; }
-    public required string Subject { get; set; }
-    public required string Item { get; set; }
-    public required string Object { get; set; }
-    public required int OwnerId { get; set; }
+    public required string Password { get; set; }
+    public required string Email { get; set; }
 
 }

@@ -21,12 +21,7 @@ public class UsersController : ControllerBase{
         List<PublicUser> publicUsers = new();
 
         foreach(User i in users)
-            publicUsers.Add(new PublicUser{
-                Id = i.Id,
-                Name = i.Name,
-                Email = i.Email,
-                Admin = i.Admin
-            });
+            publicUsers.Add(i.ToPublic());
         
         return publicUsers;
     }
@@ -62,7 +57,8 @@ public class UsersController : ControllerBase{
             Name = data.Name,
             Password = data.Password, // hash
             Email = data.Email,
-            Admin = data.Email.Equals(data.Email)
+            Admin = data.Email.Equals(data.Email),
+            Loans = []
         };
 
         await _users.InsertOneAsync(user);

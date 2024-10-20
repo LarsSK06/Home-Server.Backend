@@ -25,15 +25,14 @@ public class User{
     public required bool Admin { get; set; }
 
     [BsonElement("loans"), BsonRepresentation(BsonType.Array)]
-    public required int[] Loans { get; set; }
+    public required IEnumerable<int> Loans { get; set; }
 
     public PublicUser ToPublic(){
         return new PublicUser{
             Id = Id,
             Name = Name,
             Email = Email,
-            Admin = Admin,
-            Loans = null
+            Admin = Admin
         };
     }
 
@@ -53,7 +52,16 @@ public class PublicUser{
     public required string Name { get; set; }
     public required string Email { get; set; }
     public required bool Admin { get; set; }
-    public required IEnumerable<PublicLoan> Loans { get; set; }
+    public required IEnumerable<PublicLoanEmbed> Loans { get; set; }
+
+}
+
+public class PublicUserEmbed{
+
+    public required int Id { get; set; }
+    public required string Name { get; set; }
+    public required string Email { get; set; }
+    public required bool Admin { get; set; }
 
 }
 
