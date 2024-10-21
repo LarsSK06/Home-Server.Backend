@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using HomeServer.Models;
 using HomeServer.Data;
+using HomeServer.Utilities;
 
 namespace HomeServer.Controllers;
 
@@ -9,12 +10,14 @@ namespace HomeServer.Controllers;
 [Route("[controller]")]
 public class UsersController : ControllerBase{
 
-    public readonly IMongoCollection<User>? _users;
-    public readonly IMongoCollection<Loan>? _loans;
+    private readonly IMongoCollection<User>? _users;
+    private readonly IMongoCollection<Loan>? _loans;
+    private readonly IConfiguration _config;
 
-    public UsersController(MongoDBService mongoDBService){
+    public UsersController(MongoDBService mongoDBService, IConfiguration configuration){
         _users = mongoDBService.Database?.GetCollection<User>("users");
         _loans = mongoDBService.Database?.GetCollection<Loan>("loans");
+        _config = configuration;
     }
 
     [HttpGet]
@@ -62,16 +65,21 @@ public class UsersController : ControllerBase{
         if(_loans is null)
             return NotFound();
         
-        IAsyncCursor<User>? conflictedUsersCursor = await _users.FindAsync(Builders<User>.Filter.Eq(i => i.Email, data.Email));
+        FilterDefinition<User> conflictedUsersFilter =
+            Builders<User>.Filter.Eq(i => i.Email, data.Email);
+
+        IAsyncCursor<User>? conflictedUsersCursor =
+            await _users.FindAsync(conflictedUsersFilter);
+
         List<User> conflictedUsers = await conflictedUsersCursor.ToListAsync();
 
-        if(conflictedUsers.Count() > 0)
+        if(conflictedUsers.Count > 0)
             return Conflict();
 
         User user = new User{
-            Id = (int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds,
+            Id = Generator.GetEpoch(),
             Name = data.Name,
-            Password = data.Password, // hash
+            Password = BCrypt.Net.BCrypt.HashPassword(data.Password, 15),
             Email = data.Email,
             Admin = data.Email.Equals("lars@kvihaugen.no"),
             Loans = []
@@ -99,12 +107,14 @@ public class UsersController : ControllerBase{
         User? user = await users.FirstOrDefaultAsync();
 
         if(user is null)
-            return NotFound();
+            return BadRequest();
 
-        if(user.Password != credentials.Password)
+        if(!BCrypt.Net.BCrypt.Verify(credentials.Password, user.Password))
             return Unauthorized();
         
-        return Ok(await user.ToPublic(_loans));
+        string token = JWT.CreateToken(_config, await user.ToPublic(_loans));
+        
+        return Ok(token);
     }
 
 }

@@ -68,8 +68,12 @@ public class User{
 
 }
 
-public class PublicUser : PublicUserEmbed{
+public class PublicUser{
 
+    public required int Id { get; set; }
+    public required string Name { get; set; }
+    public required string Email { get; set; }
+    public required bool Admin { get; set; }
     public required IEnumerable<PublicLoanEmbed> Loans { get; set; }
 
 }

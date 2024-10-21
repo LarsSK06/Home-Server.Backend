@@ -65,8 +65,13 @@ public class Loan{
 
 }
 
-public class PublicLoan : PublicLoanEmbed{
+public class PublicLoan{
 
+    public required int Id { get; set; }
+    public required string Name { get; set; }
+    public required string Subject { get; set; }
+    public required string Item { get; set; }
+    public required string Object { get; set; }
     public required PublicUserEmbed? Owner { get; set; }
 
 }
