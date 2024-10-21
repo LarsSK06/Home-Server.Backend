@@ -8,8 +8,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<MongoDBService>();
 
 builder.Services.AddCors(options => {
-    options.AddPolicy(
-        name: "Policy",
+    options.AddDefaultPolicy(
         policy => {
             policy
                 .WithOrigins("http://localhost:3000")

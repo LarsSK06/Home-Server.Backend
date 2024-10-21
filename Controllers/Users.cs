@@ -2,11 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using HomeServer.Models;
 using HomeServer.Data;
-using Microsoft.AspNetCore.Cors;
 
 namespace HomeServer.Controllers;
 
-[EnableCors("Policy")]
 [ApiController]
 [Route("[controller]")]
 public class UsersController : ControllerBase{
