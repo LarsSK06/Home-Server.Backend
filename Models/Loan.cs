@@ -83,6 +83,7 @@ public class PublicLoanEmbed{
     public required string Subject { get; set; }
     public required string Item { get; set; }
     public required string Object { get; set; }
+    public PublicUserEmbed? Owner { get; set; }
 
 }
 

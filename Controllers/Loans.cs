@@ -58,7 +58,6 @@ public class LoansController : ControllerBase{
         return await first.ToPublic(_users);
     }
 
-    [Authorize(Roles = "User")]
     [HttpPost]
     public async Task<ActionResult<PublicUser>> CreateLoan(MutableLoan data){
         if(_users is null)
@@ -73,7 +72,7 @@ public class LoansController : ControllerBase{
             Subject = data.Subject,
             Item = data.Item,
             Object = data.Object,
-            OwnerId = 0 // SET OWNER ID
+            OwnerId = 1729504619 // SET OWNER ID
         };
 
         await _loans.InsertOneAsync(loan);

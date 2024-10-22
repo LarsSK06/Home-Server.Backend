@@ -84,6 +84,7 @@ public class PublicUserEmbed{
     public required string Name { get; set; }
     public required string Email { get; set; }
     public required bool Admin { get; set; }
+    public IEnumerable<PublicLoanEmbed>? Loans { get; set; }
 
 }
 
