@@ -54,10 +54,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
-
-/* NOTE
-    DO NOT USE HTTPS LAUNCH PROFILE
-    
-    This will give you CORS error about temporary redirect
-*/
