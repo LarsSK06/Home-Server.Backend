@@ -10,12 +10,10 @@ namespace HomeServer.Controllers;
 [Route("[controller]")]
 public class AuthController : ControllerBase{
 
-    private readonly MongoDBService _mongoService;
     private readonly IMongoCollection<User>? _users;
     private readonly IConfiguration _config;
 
     public AuthController(MongoDBService mongoDBService, IConfiguration configuration){
-        _mongoService = mongoDBService;
         _users = mongoDBService.Database?.GetCollection<User>("users");
         _config = configuration;
     }
@@ -25,9 +23,8 @@ public class AuthController : ControllerBase{
         if(_users is null)
             return NotFound();
 
-        FilterDefinition<User>? filter = Builders<User>.Filter.Eq(i => i.Email, credentials.Email);
-        IAsyncCursor<User>? users = await _users.FindAsync(filter);
-        User? user = await users.FirstOrDefaultAsync();
+        IAsyncCursor<User>? cursor = await _users.FindAsync(i => i.Email.Equals(credentials.Email));
+        User? user = await cursor.FirstOrDefaultAsync();
 
         if(user is null)
             return BadRequest();

@@ -11,11 +11,9 @@ namespace HomeServer.Controllers;
 public class UsersController : ControllerBase{
 
     private readonly IMongoCollection<User>? _users;
-    private readonly IConfiguration _config;
 
-    public UsersController(MongoDBService mongoDBService, IConfiguration configuration){
+    public UsersController(MongoDBService mongoDBService){
         _users = mongoDBService.Database?.GetCollection<User>("users");
-        _config = configuration;
     }
 
     [HttpGet, Authorize]

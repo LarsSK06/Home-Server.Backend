@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using HomeServer.Models;
+using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 
 namespace HomeServer.Utilities;
@@ -33,5 +34,35 @@ public struct JWT{
         SecurityToken? token = tokenHandler.CreateToken(tokenDescriptor);
 
         return tokenHandler.WriteToken(token);
+    }
+
+    public static JwtSecurityToken? ReadToken(HttpRequest request){
+        if(!request.Headers.TryGetValue("Authorization", out StringValues header))
+            return null;
+        
+        JwtSecurityTokenHandler handler = new();
+        SecurityToken? securityToken = handler.ReadToken(header.ToString().Split(" ")[1]);
+
+        if(securityToken is not null){
+            try{ return securityToken as JwtSecurityToken; }
+            catch{ return null; }
+        }
+        else return null;
+    }
+
+    public static int? GetTokenUserId(JwtSecurityToken? token){
+        if(token is null)
+            return null;
+
+        if(!int.TryParse(
+            token.Claims.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.NameId)?.Value,
+            out int parse
+        )) return null;
+
+        return parse;
+    }
+
+    public static bool CompareUserId(JwtSecurityToken? token, int userId){
+        return GetTokenUserId(token) == userId;
     }
 }
