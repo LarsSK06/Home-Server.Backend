@@ -8,26 +8,23 @@ namespace HomeServer.Utilities;
 
 public struct JWT{
     public static string CreateToken(IConfiguration config, PublicUser user){
-        List<Claim> claims = new List<Claim>{
-            new Claim(ClaimTypes.Email, user.Email)
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.ASCII.GetBytes(config.GetSection("AppSettings:JWT:Token").Value!);
+        var tokenDescriptor = new SecurityTokenDescriptor{
+            Subject = new ClaimsIdentity(new Claim[]{
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Role, "Admin")
+            }),
+            Expires = DateTime.UtcNow.AddHours(12),
+            SigningCredentials = new SigningCredentials(
+                new SymmetricSecurityKey(key),
+                SecurityAlgorithms.HmacSha256Signature
+            ),
+            Issuer = config.GetSection("AppSettings:JWT:Issuer").Value,
+            Audience = config.GetSection("AppSettings:JWT:Audience").Value
         };
-
-        SymmetricSecurityKey key =
-            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                config.GetSection("AppSettings:Token").Value!)
-            );
-
-        SigningCredentials credentials =
-            new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-
-        JwtSecurityToken token = new JwtSecurityToken(
-            claims: claims,
-            expires: DateTime.Now.AddHours(12),
-            signingCredentials: credentials
-        );
-
-        string jwt = new JwtSecurityTokenHandler().WriteToken(token);
-
-        return jwt;
+        
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+        return tokenHandler.WriteToken(token);
     }
 }

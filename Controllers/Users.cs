@@ -19,7 +19,7 @@ public class UsersController : ControllerBase{
         _config = configuration;
     }
 
-    [HttpGet, Authorize]
+    [HttpGet, Authorize(Roles = "Admin")]
     public async Task<ActionResult<IEnumerable<PublicUser>>> GetUsers(){
         if(_users is null)
             return NotFound();

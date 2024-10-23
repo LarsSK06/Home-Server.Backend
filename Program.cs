@@ -3,6 +3,7 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -10,13 +11,31 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options => {
-    options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme{
-        In = ParameterLocation.Header,
+    options.SwaggerDoc("v1", new(){ Title = "Home server Kvihaugen", Version = "v1" });
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme{
+        Description = "JWT Auth",
         Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
     });
-    
-    options.OperationFilter<SecurityRequirementsOperationFilter>();
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement()
+    {
+        {
+            new OpenApiSecurityScheme{
+                Reference = new OpenApiReference{
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = ParameterLocation.Header
+            },
+            new List<string>()
+        }
+    });
 });
 
 builder.Services.AddSingleton<MongoDBService>();
@@ -28,16 +47,20 @@ builder.Services.AddCors(options => {
     );
 });
 
-builder.Services.AddAuthentication().AddJwtBearer(options => {
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options => {
     options.TokenValidationParameters = new TokenValidationParameters{
         ValidateIssuerSigningKey = true,
-        ValidateAudience = false,
-        ValidateIssuer = false,
+        ValidateAudience = true,
+        ValidateIssuer = true,
+        ValidateLifetime = true,
+        ValidIssuer = builder.Configuration.GetSection("AppSettings:JWT:Issuer").Value,
+        ValidAudience = builder.Configuration.GetSection("AppSettings:JWT:Audience").Value,
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(
-                builder.Configuration.GetSection("AppSettings:Token").Value!
+                builder.Configuration.GetSection("AppSettings:JWT:Token").Value!
             )
-        )
+        ),
+        ClockSkew = TimeSpan.Zero
     };
 });
 
