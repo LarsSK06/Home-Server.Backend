@@ -7,13 +7,19 @@ using Microsoft.IdentityModel.Tokens;
 namespace HomeServer.Utilities;
 
 public struct JWT{
-    public static string CreateToken(IConfiguration config, PublicUser user){
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(config.GetSection("AppSettings:JWT:Token").Value!);
-        var tokenDescriptor = new SecurityTokenDescriptor{
+    public static string CreateToken(IConfiguration config, User user){
+        JwtSecurityTokenHandler? tokenHandler = new();
+
+        byte[]? key = Encoding.ASCII.GetBytes(config.GetSection("AppSettings:JWT:Token").Value!);
+
+        SecurityTokenDescriptor? tokenDescriptor = new(){
             Subject = new ClaimsIdentity(new Claim[]{
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Role, "Admin")
+                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new(ClaimTypes.Role,
+                    user.Admin
+                        ? "Admin"
+                        : "Regular"
+                )
             }),
             Expires = DateTime.UtcNow.AddHours(12),
             SigningCredentials = new SigningCredentials(
@@ -24,7 +30,8 @@ public struct JWT{
             Audience = config.GetSection("AppSettings:JWT:Audience").Value
         };
         
-        var token = tokenHandler.CreateToken(tokenDescriptor);
+        SecurityToken? token = tokenHandler.CreateToken(tokenDescriptor);
+
         return tokenHandler.WriteToken(token);
     }
 }

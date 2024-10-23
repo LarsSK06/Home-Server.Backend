@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using HomeServer.Models;
 using HomeServer.Data;
-using HomeServer.Utilities;
 using Microsoft.AspNetCore.Authorization;
 
 namespace HomeServer.Controllers;
@@ -19,7 +18,7 @@ public class UsersController : ControllerBase{
         _config = configuration;
     }
 
-    [HttpGet, Authorize(Roles = "Admin")]
+    [HttpGet, Authorize]
     public async Task<ActionResult<IEnumerable<PublicUser>>> GetUsers(){
         if(_users is null)
             return NotFound();
@@ -50,62 +49,24 @@ public class UsersController : ControllerBase{
         return first.ToPublic();
     }
 
-    [HttpPost]
-    public async Task<ActionResult<PublicUser>> CreateUser(MutableUser data){
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("{id}")]
+    public async Task<ActionResult<PublicUser>> DeleteUser(int id){
         if(_users is null)
             return NotFound();
         
-        FilterDefinition<User> conflictedUsersFilter =
-            Builders<User>.Filter.Eq(i => i.Email, data.Email);
+        FilterDefinition<User>? filter = Builders<User>.Filter.Eq(i => i.Id, id);
+        IAsyncCursor<User>? cursor = await _users.FindAsync(filter);
+        User? first = await cursor.FirstOrDefaultAsync();
 
-        IAsyncCursor<User>? conflictedUsersCursor =
-            await _users.FindAsync(conflictedUsersFilter);
-
-        List<User> conflictedUsers = await conflictedUsersCursor.ToListAsync();
-
-        if(conflictedUsers.Count > 0)
-            return Conflict();
-
-        User user = new(){
-            Id = Generator.GetEpoch(),
-            Name = data.Name,
-            Password = BCrypt.Net.BCrypt.HashPassword(data.Password, 15),
-            Email = data.Email,
-            Admin = data.Email.Equals("lars@kvihaugen.no")
-        };
-
-        await _users.InsertOneAsync(user);
-
-        return CreatedAtAction(
-            nameof(GetUser),
-            new { id = user.Id },
-            user.ToPublic()
-        );
-    }
-
-    [HttpPost("LogIn")]
-    public async Task<ActionResult<PublicUser>> LogIn(Credentials credentials){
-        if(_users is null)
+        if(first is null)
             return NotFound();
 
-        FilterDefinition<User>? filter = Builders<User>.Filter.Eq(i => i.Email, credentials.Email);
-        IAsyncCursor<User>? users = await _users.FindAsync(filter);
-        User? user = await users.FirstOrDefaultAsync();
+        DeleteResult? result = await _users.DeleteOneAsync(filter);
 
-        if(user is null)
-            return BadRequest();
-
-        if(!BCrypt.Net.BCrypt.Verify(credentials.Password, user.Password))
-            return Unauthorized();
-        
-        string token = JWT.CreateToken(_config, user.ToPublic());
-        
-        return Ok(token);
+        return result.DeletedCount > 0
+            ? Ok(first.ToPublic())
+            : BadRequest();
     }
 
-}
-
-public class Credentials{
-    public required string Email { get; set; }
-    public required string Password { get; set; }
 }
